@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_restplus import Resource, Api, fields
 
 
 # configuration
@@ -7,6 +8,7 @@ DEBUG = True
 
 # instantiate the app2
 app2 = Flask(__name__)
+api = Api(app2)
 app2.config.from_object(__name__)
 
 # enable CORS
@@ -69,12 +71,44 @@ VOTE_SEED = [
     }
 ]
 
-@app2.route('/vote', methods=['GET'])
+@api.route('/hello')
+class HelloWorld(Resource):
+    def get(self):
+        return (VOTE_SEED)
+
+@app2.route('/vote', methods=['GET', 'POST'])
+def all_votes():
+    response_object = {'status': 'success'}
+    if request.method == 'POST':
+        post_data = request.get_json()
+        VOTE_SEED.append({
+            'id': post_data.get('id'),
+            'title': post_data.get('title'),
+            'description': post_data.get('description'),
+            'url': post_data.get('url'),
+            'votes': post_data.get('votes'),
+            'avatar': post_data.get('avatar'),
+            'submissionImage': post_data.get('submissionImage')
+        })
+        response_object['message'] = 'Post added!'
+    else:
+        response_object['articles'] = VOTE_SEED
+    return jsonify(response_object)
+
+@app2.route('/books', methods=['GET', 'POST'])
 def all_books():
-    return jsonify({
-        'status': 'success',
-        'articles': VOTE_SEED
-    })
+    response_object = {'status': 'success'}
+    if request.method == 'POST':
+        post_data = request.get_json()
+        BOOKS.append({
+            'title': post_data.get('title'),
+            'author': post_data.get('author'),
+            'read': post_data.get('read')
+        })
+        response_object['message'] = 'Book added!'
+    else:
+        response_object['books'] = BOOKS
+    return jsonify(response_object)
 
 # sanity check route
 @app2.route('/ping', methods=['GET'])
